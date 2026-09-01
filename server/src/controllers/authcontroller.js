@@ -134,3 +134,52 @@ export const loginUser = async (req, res) => {
     });
   }
 };
+
+
+//creating refresh token so when access expire it get
+export const refreshAccessToken = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token missing",
+      });
+    }
+
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
+
+    const accessToken = generateAccessToken(decoded.userId);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        accessToken,
+      },
+    });
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired refresh token",
+    });
+  }
+};
+
+
+//logout
+export const logoutUser = async (req, res) => {
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Logout successful",
+  });
+};
