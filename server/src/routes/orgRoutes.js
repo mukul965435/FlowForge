@@ -6,6 +6,7 @@ import {
   createOrgSchema,
   updateOrgSchema,
   updateMemberRoleSchema,
+  inviteMemberSchema,
 } from "../validators/orgValidator.js";
 import * as orgController from "../controllers/orgController.js";
 
@@ -22,7 +23,12 @@ router
 router
   .route("/:id")
   .get(authorizeOrgRole("OWNER", "ADMIN", "MANAGER", "MEMBER"), orgController.getOrganizationById)
-  .patch(validate(updateOrgSchema), authorizeOrgRole("OWNER", "ADMIN"), orgController.updateOrganization);
+  .patch(validate(updateOrgSchema), authorizeOrgRole("OWNER", "ADMIN"), orgController.updateOrganization)
+  .delete(authorizeOrgRole("OWNER"), orgController.archiveOrganization);
+
+router
+  .route("/:id/invitations")
+  .post(validate(inviteMemberSchema), authorizeOrgRole("OWNER", "ADMIN"), orgController.inviteMember);
 
 router
   .route("/:id/members")
@@ -34,3 +40,4 @@ router
   .delete(authorizeOrgRole("OWNER", "ADMIN"), orgController.removeMember);
 
 export default router;
+

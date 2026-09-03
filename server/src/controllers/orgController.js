@@ -115,3 +115,42 @@ export const removeMember = async (req, res, next) => {
     next(error);
   }
 };
+
+export const inviteMember = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { email, role } = req.body;
+    const requesterUserId = req.user.id;
+
+    const membership = await orgService.inviteMember({
+      orgId: id,
+      email,
+      role,
+      requesterUserId,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Member invited successfully",
+      data: { membership },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const archiveOrganization = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const organization = await orgService.archiveOrganization(id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Organization archived successfully",
+      data: { organization },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

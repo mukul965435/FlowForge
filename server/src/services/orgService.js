@@ -145,3 +145,53 @@ export const removeMember = async (orgId, targetUserId, requesterUserId) => {
   await Membership.findByIdAndDelete(targetMembership._id);
   return { success: true };
 };
+
+export const inviteMember = async ({ orgId, email, role, requesterUserId }) => {
+  const userToInvite = await User.findOne({ email: email.toLowerCase().trim() });
+  if (!userToInvite) {
+    throw new AppError("No user registered with this email address", 4404 || 404, "USER_NOT_FOUND");
+  }
+
+  const existingMembership = await Membership.findOne({
+    organizationId: orgId,
+    userId: userToInvite._id,
+  });
+
+  if (existingMembership) {
+    if (existingMembership.status === "ACTIVE") {
+      throw new AppError("User is already an active member of this organization", 409, "MEMBER_ALREADY_EXISTS");
+    }
+    // Re-activate member if suspended/invited
+    existingMembership.status = "ACTIVE";
+    existingMembership.role = role || existingMembership.role;
+    existingMembership.invitedBy = requesterUserId;
+    await existingMembership.save();
+    return existingMembership;
+  }
+
+  const newMembership = await Membership.create({
+    organizationId: orgId,
+    userId: userToInvite._id,
+    role: role || "MEMBER",
+    status: "ACTIVE",
+    invitedBy: requesterUserId,
+    joinedAt: new Date(),
+  });
+
+  return newMembership;
+};
+
+export const archiveOrganization = async (orgId) => {
+  const organization = await Organization.findByIdAndUpdate(
+    orgId,
+    { archivedAt: new Date() },
+    { new: true }
+  );
+
+  if (!organization) {
+    throw new AppError("Organization not found", 404, "ORG_NOT_FOUND");
+  }
+
+  return organization;
+};
+
