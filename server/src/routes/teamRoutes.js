@@ -5,6 +5,8 @@ import { validate } from "../middleware/validatemiddleware.js";
 import {
   createTeamSchema,
   updateTeamSchema,
+  addTeamMemberSchema,
+  updateTeamMemberRoleSchema,
 } from "../validators/teamValidator.js";
 import * as teamController from "../controllers/teamController.js";
 
@@ -42,4 +44,29 @@ router
     teamController.archiveTeam
   );
 
+router
+  .route("/:teamId/members")
+  .post(
+    authorizeOrgRole("OWNER", "ADMIN", "MANAGER"),
+    validate(addTeamMemberSchema),
+    teamController.addTeamMember
+  )
+  .get(
+    authorizeOrgRole("OWNER", "ADMIN", "MANAGER", "MEMBER"),
+    teamController.getTeamMembers
+  );
+
+router
+  .route("/:teamId/members/:userId")
+  .patch(
+    authorizeOrgRole("OWNER", "ADMIN", "MANAGER"),
+    validate(updateTeamMemberRoleSchema),
+    teamController.updateTeamMemberRole
+  )
+  .delete(
+    authorizeOrgRole("OWNER", "ADMIN", "MANAGER"),
+    teamController.removeTeamMember
+  );
+
 export default router;
+

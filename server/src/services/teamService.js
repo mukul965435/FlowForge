@@ -1,5 +1,6 @@
 import Team from "../models/Team.js";
 import TeamMembership from "../models/TeamMembership.js";
+import Membership from "../models/Membership.js";
 import AppError from "../utils/AppError.js";
 
 export const createTeam = async ({ organizationId, name, description, createdBy }) => {
@@ -92,3 +93,89 @@ export const archiveTeam = async (teamId, organizationId) => {
 
   return team;
 };
+
+export const addTeamMember = async ({ teamId, organizationId, userId, role }) => {
+  const team = await Team.findOne({ _id: teamId, organizationId, archivedAt: null });
+  if (!team) {
+    throw new AppError("Team not found in this organization", 404, "TEAM_NOT_FOUND");
+  }
+
+  const orgMembership = await Membership.findOne({
+    organizationId,
+    userId,
+    status: "ACTIVE",
+  });
+
+  if (!orgMembership) {
+    throw new AppError(
+      "User is not an active member of this organization",
+      400,
+      "USER_NOT_IN_ORGANIZATION"
+    );
+  }
+
+  const existingTeamMembership = await TeamMembership.findOne({ teamId, userId });
+  if (existingTeamMembership) {
+    throw new AppError("User is already a member of this team", 409, "TEAM_MEMBER_EXISTS");
+  }
+
+  const teamMembership = await TeamMembership.create({
+    teamId,
+    userId,
+    role: role || "MEMBER",
+    joinedAt: new Date(),
+  });
+
+  return teamMembership;
+};
+
+export const getTeamMembers = async (teamId, organizationId) => {
+  const team = await Team.findOne({ _id: teamId, organizationId, archivedAt: null });
+  if (!team) {
+    throw new AppError("Team not found in this organization", 404, "TEAM_NOT_FOUND");
+  }
+
+  const members = await TeamMembership.find({ teamId })
+    .populate("userId", "name email avatar")
+    .lean();
+
+  return members.map((m) => ({
+    membershipId: m._id,
+    user: m.userId,
+    role: m.role,
+    joinedAt: m.joinedAt,
+  }));
+};
+
+export const updateTeamMemberRole = async (teamId, organizationId, targetUserId, newRole) => {
+  const team = await Team.findOne({ _id: teamId, organizationId, archivedAt: null });
+  if (!team) {
+    throw new AppError("Team not found in this organization", 404, "TEAM_NOT_FOUND");
+  }
+
+  const teamMembership = await TeamMembership.findOne({ teamId, userId: targetUserId });
+  if (!teamMembership) {
+    throw new AppError("User is not a member of this team", 404, "TEAM_MEMBER_NOT_FOUND");
+  }
+
+  teamMembership.role = newRole;
+  await teamMembership.save();
+
+  return teamMembership;
+};
+
+export const removeTeamMember = async (teamId, organizationId, targetUserId) => {
+  const team = await Team.findOne({ _id: teamId, organizationId, archivedAt: null });
+  if (!team) {
+    throw new AppError("Team not found in this organization", 404, "TEAM_NOT_FOUND");
+  }
+
+  const teamMembership = await TeamMembership.findOne({ teamId, userId: targetUserId });
+  if (!teamMembership) {
+    throw new AppError("User is not a member of this team", 404, "TEAM_MEMBER_NOT_FOUND");
+  }
+
+  await TeamMembership.findByIdAndDelete(teamMembership._id);
+  return { success: true };
+};
+

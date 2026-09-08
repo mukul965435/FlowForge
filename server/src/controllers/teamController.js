@@ -81,3 +81,78 @@ export const archiveTeam = async (req, res, next) => {
     next(error);
   }
 };
+
+export const addTeamMember = async (req, res, next) => {
+  try {
+    const { orgId, teamId } = req.params;
+    const { userId, role } = req.body;
+
+    const teamMembership = await teamService.addTeamMember({
+      teamId,
+      organizationId: orgId,
+      userId,
+      role,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Member added to team successfully",
+      data: { teamMembership },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTeamMembers = async (req, res, next) => {
+  try {
+    const { orgId, teamId } = req.params;
+    const members = await teamService.getTeamMembers(teamId, orgId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Team members fetched successfully",
+      data: { members },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateTeamMemberRole = async (req, res, next) => {
+  try {
+    const { orgId, teamId, userId } = req.params;
+    const { role } = req.body;
+
+    const teamMembership = await teamService.updateTeamMemberRole(
+      teamId,
+      orgId,
+      userId,
+      role
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Team member role updated successfully",
+      data: { teamMembership },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const removeTeamMember = async (req, res, next) => {
+  try {
+    const { orgId, teamId, userId } = req.params;
+
+    await teamService.removeTeamMember(teamId, orgId, userId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Member removed from team successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
