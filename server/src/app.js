@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userroutes.js";
 import orgRoutes from "./routes/orgRoutes.js";
 import teamRoutes from "./routes/teamRoutes.js";
+import projectRoutes from "./routes/projectRoutes.js";
 import { errorHandler } from "./middleware/errormiddleware.js";
 
 const app = express();
@@ -27,6 +28,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/organizations", orgRoutes);
 app.use("/api/v1/organizations/:orgId/teams", teamRoutes);
+app.use("/api/v1/organizations/:orgId/projects", projectRoutes);
 
 app.get("/api/v1/health", (req, res) => {
   res.status(200).json({
@@ -39,4 +41,5 @@ app.get("/api/v1/health", (req, res) => {
 app.use(errorHandler);
 
 export default app;
+
 
