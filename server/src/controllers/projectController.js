@@ -83,3 +83,19 @@ export const archiveProject = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getOrganizationProjectStats = async (req, res, next) => {
+  try {
+    const { orgId } = req.params;
+    const stats = await projectService.getOrganizationProjectStats(orgId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Project statistics fetched successfully",
+      data: { stats },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

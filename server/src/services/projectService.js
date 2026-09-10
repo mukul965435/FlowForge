@@ -1,4 +1,6 @@
+import mongoose from "mongoose";
 import Project from "../models/Project.js";
+import Team from "../models/Team.js";
 import AppError from "../utils/AppError.js";
 
 const generateProjectKey = (name) => {
@@ -19,6 +21,13 @@ const generateProjectKey = (name) => {
 };
 
 export const createProject = async ({ organizationId, name, key, description, teamId, createdBy }) => {
+  if (teamId) {
+    const team = await Team.findOne({ _id: teamId, organizationId, archivedAt: null });
+    if (!team) {
+      throw new AppError("Team not found in this organization", 400, "INVALID_TEAM_ID");
+    }
+  }
+
   let finalKey = key ? key.toUpperCase().trim() : generateProjectKey(name);
 
   // Handle key collision within the same organization
@@ -96,6 +105,13 @@ export const getProjectById = async (projectId, organizationId) => {
 };
 
 export const updateProject = async (projectId, organizationId, updateData) => {
+  if (updateData.teamId) {
+    const team = await Team.findOne({ _id: updateData.teamId, organizationId, archivedAt: null });
+    if (!team) {
+      throw new AppError("Team not found in this organization", 400, "INVALID_TEAM_ID");
+    }
+  }
+
   const project = await Project.findOneAndUpdate(
     { _id: projectId, organizationId, archivedAt: null },
     updateData,
@@ -122,3 +138,39 @@ export const archiveProject = async (projectId, organizationId) => {
 
   return project;
 };
+
+export const getOrganizationProjectStats = async (organizationId) => {
+  const orgObjectId = new mongoose.Types.ObjectId(organizationId);
+
+  const stats = await Project.aggregate([
+    { $match: { organizationId: orgObjectId } },
+    {
+      $group: {
+        _id: null,
+        totalProjects: { $sum: 1 },
+        activeProjects: {
+          $sum: { $cond: [{ $eq: ["$status", "ACTIVE"] }, 1, 0] },
+        },
+        completedProjects: {
+          $sum: { $cond: [{ $eq: ["$status", "COMPLETED"] }, 1, 0] },
+        },
+        archivedProjects: {
+          $sum: { $cond: [{ $eq: ["$status", "ARCHIVED"] }, 1, 0] },
+        },
+      },
+    },
+  ]);
+
+  if (!stats || stats.length === 0) {
+    return {
+      totalProjects: 0,
+      activeProjects: 0,
+      completedProjects: 0,
+      archivedProjects: 0,
+    };
+  }
+
+  const { totalProjects, activeProjects, completedProjects, archivedProjects } = stats[0];
+  return { totalProjects, activeProjects, completedProjects, archivedProjects };
+};
+

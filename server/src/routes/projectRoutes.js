@@ -29,11 +29,19 @@ router
   );
 
 router
+  .route("/stats")
+  .get(
+    authorizeOrgRole("OWNER", "ADMIN", "MANAGER", "MEMBER"),
+    projectController.getOrganizationProjectStats
+  );
+
+router
   .route("/:projectId")
   .get(
     authorizeOrgRole("OWNER", "ADMIN", "MANAGER", "MEMBER"),
     projectController.getProjectById
   )
+
   .patch(
     authorizeOrgRole("OWNER", "ADMIN", "MANAGER"),
     validate(updateProjectSchema),
