@@ -5,6 +5,8 @@ import ProtectedRoute from "./components/layout/ProtectedRoute";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
+import OrgsPage from "./pages/orgs/OrgsPage";
+import TeamsPage from "./pages/teams/TeamsPage";
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/orgs" element={<OrgsPage />} />
+            <Route path="/teams" element={<TeamsPage />} />
           </Route>
 
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -29,4 +33,5 @@ function App() {
 }
 
 export default App;
+
 
