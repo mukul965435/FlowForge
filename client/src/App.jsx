@@ -7,6 +7,7 @@ import RegisterPage from "./pages/auth/RegisterPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import OrgsPage from "./pages/orgs/OrgsPage";
 import TeamsPage from "./pages/teams/TeamsPage";
+import ProjectsPage from "./pages/projects/ProjectsPage";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/orgs" element={<OrgsPage />} />
             <Route path="/teams" element={<TeamsPage />} />
+            <Route path="/projects" element={<ProjectsPage />} />
           </Route>
 
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -33,5 +35,3 @@ function App() {
 }
 
 export default App;
-
-
